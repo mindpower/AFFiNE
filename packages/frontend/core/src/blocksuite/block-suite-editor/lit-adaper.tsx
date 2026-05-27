@@ -2,6 +2,7 @@
 import 'katex/dist/katex.min.css';
 
 import { useConfirmModal, useLitPortalFactory } from '@affine/component';
+import { i18nTime, useI18n } from '@affine/i18n';
 import {
   type EdgelessEditor,
   LitDocEditor,
@@ -41,6 +42,7 @@ import {
   useEffect,
   useMemo,
   useRef,
+  useState,
 } from 'react';
 
 import {
@@ -49,7 +51,6 @@ import {
 } from '../../components/properties';
 import { BiDirectionalLinkPanel } from './bi-directional-link-panel';
 import { DocIconPicker } from './doc-icon-picker';
-import { BlocksuiteEditorJournalDocTitle } from './journal-doc-title';
 import { StarterBar } from './starter-bar';
 import * as styles from './styles.css';
 
@@ -173,13 +174,73 @@ export const BlocksuiteDocEditor = forwardRef<
     readonly,
   },
   ref
-) {
-  const titleRef = useRef<DocTitle | null>(null);
-  const docRef = useRef<PageEditor | null>(null);
+	) {
+	  const titleRef = useRef<DocTitle | null>(null);
+	  const [docTitleEl, setDocTitleEl] = useState<DocTitle | null>(null);
+	  const docRef = useRef<PageEditor | null>(null);
 
   const editorSettingService = useService(EditorSettingService);
   const journalService = useService(JournalService);
   const journalDateStr = useLiveData(journalService.journalDate$(page.id));
+  const isJournalToday = useLiveData(journalService.journalToday$(page.id));
+  const t = useI18n();
+
+  useEffect(() => {
+    const host = docTitleEl;
+    if (!host) return;
+
+    const selector = "[data-testid='journal-title-tags']";
+    const removeTags = () => {
+      host.querySelector(selector)?.remove();
+    };
+
+    removeTags();
+
+    if (!journalDateStr) return;
+
+    let frame: number | null = null;
+
+    const apply = () => {
+      const container = host.querySelector<HTMLElement>('.doc-title-container');
+      if (!container) {
+        frame = requestAnimationFrame(apply);
+        return;
+      }
+
+      const tags = document.createElement('span');
+      tags.setAttribute('data-testid', 'journal-title-tags');
+      tags.style.display = 'inline-flex';
+      tags.style.alignItems = 'center';
+      tags.style.flexShrink = '0';
+
+      const dateTag = document.createElement('span');
+      dateTag.className = styles.titleDayTag;
+      dateTag.setAttribute('contenteditable', 'false');
+      dateTag.textContent = i18nTime(journalDateStr, {
+        absolute: { accuracy: 'day' },
+      });
+      tags.append(dateTag);
+
+      if (isJournalToday) {
+        const todayTag = document.createElement('span');
+        todayTag.className = styles.titleTodayTag;
+        todayTag.setAttribute('contenteditable', 'false');
+        todayTag.textContent = t['com.affine.today']();
+        tags.append(todayTag);
+      }
+
+      container.append(tags);
+    };
+
+    apply();
+
+    return () => {
+      if (frame !== null) {
+        cancelAnimationFrame(frame);
+      }
+      removeTags();
+    };
+  }, [docTitleEl, isJournalToday, journalDateStr, t]);
 
   const onDocRef = useCallback(
     (el: PageEditor) => {
@@ -195,13 +256,14 @@ export const BlocksuiteDocEditor = forwardRef<
     [ref]
   );
 
-  const onTitleRef = useCallback(
-    (el: DocTitle) => {
-      titleRef.current = el;
-      if (externalTitleRef) {
-        if (typeof externalTitleRef === 'function') {
-          externalTitleRef(el);
-        } else {
+	  const onTitleRef = useCallback(
+	    (el: DocTitle) => {
+	      titleRef.current = el;
+	      setDocTitleEl(el);
+	      if (externalTitleRef) {
+	        if (typeof externalTitleRef === 'function') {
+	          externalTitleRef(el);
+	        } else {
           externalTitleRef.current = el;
         }
       }
@@ -259,11 +321,7 @@ export const BlocksuiteDocEditor = forwardRef<
         {!BUILD_CONFIG.isMobileEdition ? (
           <DocIconPicker docId={page.id} readonly={readonly || shared} />
         ) : null}
-        {journalDateStr ? (
-          <BlocksuiteEditorJournalDocTitle page={page} />
-        ) : (
-          <LitDocTitle doc={page} ref={onTitleRef} />
-        )}
+        <LitDocTitle doc={page} ref={onTitleRef} />
         {!shared && displayDocInfo ? (
           <div className={styles.docPropertiesTableContainer}>
             <WorkspacePropertiesTable
