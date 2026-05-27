@@ -163,6 +163,17 @@ jobs:
       - name: List server-native files
         run: ls -alh ./packages/backend/native
 
+      - name: Ensure native bindings for bundler
+        run: |
+          set -euo pipefail
+          if [ -f ./packages/backend/native/server-native.x64.node ]; then
+            for f in server-native.arm64.node server-native.armv7.node; do
+              if [ ! -f "./packages/backend/native/$f" ]; then
+                cp ./packages/backend/native/server-native.x64.node "./packages/backend/native/$f"
+              fi
+            done
+          fi
+
       - name: Build Server
         run: yarn workspace @affine/server build
 
@@ -212,6 +223,12 @@ jobs:
         with:
           name: mobile
           path: ./packages/frontend/apps/mobile/dist
+
+      - name: Ensure frontend dist directories exist
+        run: |
+          mkdir -p ./packages/frontend/apps/web/dist
+          mkdir -p ./packages/frontend/admin/dist
+          mkdir -p ./packages/frontend/apps/mobile/dist
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
@@ -266,7 +283,7 @@ jobs:
           BRANCH_TAG=$(echo "$BRANCH_NAME" | sed 's/\//-/g')
           TAGS="${TAGS},ghcr.io/${REPO_OWNER_LOWER}/affine:${BRANCH_TAG}"
 
-          echo "tags=${TAGS}" >> $GITHUB_OUTPUT
+          echo "tags=${TAGS}" >> "$GITHUB_OUTPUT"
           echo "Docker tags: ${TAGS}"
 
       - name: Build and push Docker image

@@ -19,6 +19,7 @@ import type {
 } from '@affine/core/modules/doc-info/types';
 import { EditorSettingService } from '@affine/core/modules/editor-setting';
 import { FeatureFlagService } from '@affine/core/modules/feature-flag';
+import { JournalService } from '@affine/core/modules/journal';
 import { useInsidePeekView } from '@affine/core/modules/peek-view';
 import { WorkspaceService } from '@affine/core/modules/workspace';
 import { ServerFeature } from '@affine/graphql';
@@ -48,6 +49,7 @@ import {
 } from '../../components/properties';
 import { BiDirectionalLinkPanel } from './bi-directional-link-panel';
 import { DocIconPicker } from './doc-icon-picker';
+import { BlocksuiteEditorJournalDocTitle } from './journal-doc-title';
 import { StarterBar } from './starter-bar';
 import * as styles from './styles.css';
 
@@ -176,6 +178,8 @@ export const BlocksuiteDocEditor = forwardRef<
   const docRef = useRef<PageEditor | null>(null);
 
   const editorSettingService = useService(EditorSettingService);
+  const journalService = useService(JournalService);
+  const journalDateStr = useLiveData(journalService.journalDate$(page.id));
 
   const onDocRef = useCallback(
     (el: PageEditor) => {
@@ -255,7 +259,11 @@ export const BlocksuiteDocEditor = forwardRef<
         {!BUILD_CONFIG.isMobileEdition ? (
           <DocIconPicker docId={page.id} readonly={readonly || shared} />
         ) : null}
-        <LitDocTitle doc={page} ref={onTitleRef} />
+        {journalDateStr ? (
+          <BlocksuiteEditorJournalDocTitle page={page} />
+        ) : (
+          <LitDocTitle doc={page} ref={onTitleRef} />
+        )}
         {!shared && displayDocInfo ? (
           <div className={styles.docPropertiesTableContainer}>
             <WorkspacePropertiesTable

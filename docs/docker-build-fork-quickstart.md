@@ -7,6 +7,7 @@ This fork includes a custom GitHub Actions workflow to build and deploy AFFiNE s
 ### Option 1: Automatic Builds (Easiest)
 
 Docker images are automatically built when you push to:
+
 - `main` branch
 - Any `claude/**` branches
 
@@ -32,6 +33,7 @@ docker run -p 3010:3010 ghcr.io/mindpower/affine:latest
 ## 📦 What You Get
 
 After a successful build, you'll have Docker images tagged with:
+
 - `latest` - Most recent build
 - `<branch-name>` - Branch-specific builds
 - `<commit-sha>` - Specific commit builds
@@ -39,7 +41,8 @@ After a successful build, you'll have Docker images tagged with:
 ## 📚 Full Documentation
 
 For detailed instructions, configuration options, and troubleshooting, see:
-- **[Docker Build Documentation](docs/docker-build-fork.md)**
+
+- **[Docker Build Documentation](./docker-build-fork.md)**
 
 ## 🔧 Running the Server
 
@@ -73,4 +76,4 @@ Feel free to customize it for your needs!
 
 ---
 
-**Need help?** Check the [full documentation](docs/docker-build-fork.md) or view workflow runs in the Actions tab.
+**Need help?** Check the [full documentation](./docker-build-fork.md) or view workflow runs in the Actions tab.
