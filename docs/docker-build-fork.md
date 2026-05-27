@@ -11,6 +11,7 @@ The workflow `.github/workflows/build-docker-fork.yml` has been created to autom
 #### Automatic Builds
 
 The workflow automatically triggers on:
+
 - Push to `main` branch
 - Push to any `claude/**` branches
 
@@ -30,6 +31,7 @@ You can also trigger builds manually with custom options:
 #### Accessing Your Images
 
 After the workflow completes, your Docker images will be available at:
+
 ```
 ghcr.io/<your-github-username>/affine:latest
 ghcr.io/<your-github-username>/affine:<branch-name>
@@ -37,6 +39,7 @@ ghcr.io/<your-github-username>/affine:<commit-sha>
 ```
 
 For example, if your GitHub username is `mindpower`:
+
 ```bash
 # Pull the latest image
 docker pull ghcr.io/mindpower/affine:latest
@@ -107,7 +110,7 @@ services:
     image: ghcr.io/<your-username>/affine:latest
     container_name: affine-server
     ports:
-      - "3010:3010"
+      - '3010:3010'
     environment:
       - DATABASE_URL=postgresql://affine:affine@postgres:5432/affine
       - REDIS_SERVER_HOST=redis
@@ -138,6 +141,7 @@ volumes:
 ```
 
 Then run:
+
 ```bash
 docker-compose up -d
 ```
@@ -181,6 +185,7 @@ If you need additional build-time configuration (Sentry, analytics, etc.), add t
 The workflow uses only the built-in `GITHUB_TOKEN` for pushing to GHCR. No additional secrets are required for basic functionality.
 
 Optional secrets you can add in **Settings → Secrets and variables → Actions**:
+
 - `SENTRY_AUTH_TOKEN` - For error tracking
 - `R2_*` - For Cloudflare R2 storage
 - `CAPTCHA_SITE_KEY` - For CAPTCHA integration
@@ -196,14 +201,17 @@ Optional secrets you can add in **Settings → Secrets and variables → Actions
 ### Build Failures
 
 **Node.js version mismatch:**
+
 - The workflow uses the version specified in `.nvmrc` (22.22.3)
 - Ensure your local environment matches this version
 
 **Rust toolchain issues:**
+
 - Install Rust: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
 - The workflow uses the version specified in `rust-toolchain.toml`
 
 **Out of disk space:**
+
 - GitHub Actions runners have limited disk space
 - The workflow only builds x64 by default to save space
 - Enable multi-arch only if needed
@@ -239,9 +247,11 @@ This fork's Docker workflow differs from the upstream in:
 ## Support
 
 For issues specific to your fork:
+
 - Check the Actions tab for build logs
 - Review the workflow file for configuration issues
 
 For AFFiNE-specific issues:
+
 - Visit the [upstream repository](https://github.com/toeverything/AFFiNE)
 - Check the [official documentation](https://docs.affine.pro/)
