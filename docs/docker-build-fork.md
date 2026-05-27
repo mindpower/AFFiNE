@@ -45,7 +45,7 @@ docker pull ghcr.io/mindpower/affine:latest
 docker pull ghcr.io/mindpower/affine:claude-deploy-docker-image-for-server
 
 # Pull a specific commit
-docker pull ghcr.io/mindpower/affine:655cc88
+docker pull ghcr.io/mindpower/affine:655cc88e5f5d6d7a8b9c0d1e2f3a4b5c6d7e8f9
 ```
 
 ### Method 2: Local Build
