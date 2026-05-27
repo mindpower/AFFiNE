@@ -55,7 +55,7 @@ docker run -d \
 
 ### With Docker Compose
 
-See the full example in [docs/docker-build-fork.md](docs/docker-build-fork.md#with-docker-compose)
+See the full example in [docs/docker-build-fork.md](./docker-build-fork.md#with-docker-compose)
 
 ## ✨ Key Features
 
