@@ -19,9 +19,11 @@ import type {
 } from '@affine/core/modules/doc-info/types';
 import { EditorSettingService } from '@affine/core/modules/editor-setting';
 import { FeatureFlagService } from '@affine/core/modules/feature-flag';
+import { JournalService } from '@affine/core/modules/journal';
 import { useInsidePeekView } from '@affine/core/modules/peek-view';
 import { WorkspaceService } from '@affine/core/modules/workspace';
 import { ServerFeature } from '@affine/graphql';
+import { i18nTime, useI18n } from '@affine/i18n';
 import track from '@affine/track';
 import type { DocTitle } from '@blocksuite/affine/fragments/doc-title';
 import type { DocMode } from '@blocksuite/affine/model';
@@ -32,6 +34,7 @@ import {
   useService,
   useServices,
 } from '@toeverything/infra';
+import dayjs from 'dayjs';
 import type React from 'react';
 import {
   forwardRef,
@@ -40,6 +43,7 @@ import {
   useEffect,
   useMemo,
   useRef,
+  useState,
 } from 'react';
 
 import {
@@ -173,9 +177,83 @@ export const BlocksuiteDocEditor = forwardRef<
   ref
 ) {
   const titleRef = useRef<DocTitle | null>(null);
+  const [docTitleEl, setDocTitleEl] = useState<DocTitle | null>(null);
   const docRef = useRef<PageEditor | null>(null);
 
   const editorSettingService = useService(EditorSettingService);
+  const journalService = useService(JournalService);
+  const journalDateStr = useLiveData(journalService.journalDate$(page.id));
+  const isJournalToday = useLiveData(journalService.journalToday$(page.id));
+  const t = useI18n();
+
+  useEffect(() => {
+    const host = docTitleEl;
+    if (!host) return;
+
+    const removeTags = () => {
+      host.querySelector('[data-journal-title-tags]')?.remove();
+      const container = host.querySelector<HTMLElement>('.doc-title-container');
+      if (container?.dataset.testid === 'journal-title') {
+        delete container.dataset.testid;
+      }
+    };
+
+    removeTags();
+
+    if (!journalDateStr) return;
+
+    let frame: number | null = null;
+
+    const apply = () => {
+      const container = host.querySelector<HTMLElement>('.doc-title-container');
+      if (!container) {
+        frame = requestAnimationFrame(apply);
+        return;
+      }
+
+      container.dataset.testid = 'journal-title';
+
+      const tags = document.createElement('span');
+      tags.dataset.journalTitleTags = 'true';
+      tags.style.display = 'inline-flex';
+      tags.style.alignItems = 'center';
+      tags.style.flexShrink = '0';
+
+      const dateEl = document.createElement('span');
+      dateEl.dataset.testid = 'date';
+      dateEl.setAttribute('contenteditable', 'false');
+      dateEl.textContent = i18nTime(journalDateStr, {
+        absolute: { accuracy: 'day' },
+      });
+      tags.append(dateEl);
+
+      if (isJournalToday) {
+        const todayTag = document.createElement('span');
+        todayTag.className = styles.titleTodayTag;
+        todayTag.dataset.testid = 'date-today-label';
+        todayTag.setAttribute('contenteditable', 'false');
+        todayTag.textContent = t['com.affine.today']();
+        tags.append(todayTag);
+      } else {
+        const dayTag = document.createElement('span');
+        dayTag.className = styles.titleDayTag;
+        dayTag.setAttribute('contenteditable', 'false');
+        dayTag.textContent = dayjs(journalDateStr).format('dddd') ?? '';
+        tags.append(dayTag);
+      }
+
+      container.append(tags);
+    };
+
+    apply();
+
+    return () => {
+      if (frame !== null) {
+        cancelAnimationFrame(frame);
+      }
+      removeTags();
+    };
+  }, [docTitleEl, isJournalToday, journalDateStr, t]);
 
   const onDocRef = useCallback(
     (el: PageEditor) => {
@@ -192,8 +270,9 @@ export const BlocksuiteDocEditor = forwardRef<
   );
 
   const onTitleRef = useCallback(
-    (el: DocTitle) => {
+    (el: DocTitle | null) => {
       titleRef.current = el;
+      setDocTitleEl(el);
       if (externalTitleRef) {
         if (typeof externalTitleRef === 'function') {
           externalTitleRef(el);

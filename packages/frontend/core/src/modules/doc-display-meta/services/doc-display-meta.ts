@@ -205,14 +205,20 @@ export class DocDisplayMetaService extends Service {
       // title alias
       if (titleAlias) return titleAlias;
 
-      if (journalTitle) return journalTitle;
-
       // doc not found
       if (!doc) {
         return this.i18nService.i18n.i18next.t(
           'com.affine.notFoundPage.title',
           { lng }
         );
+      }
+
+      // journal title: prefer user-edited title, otherwise fall back to date title
+      if (journalTitle) {
+        if (originalTitle && originalTitle !== journalDateString) {
+          return originalTitle;
+        }
+        return journalTitle;
       }
 
       // original title
